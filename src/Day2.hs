@@ -1,29 +1,40 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+
+{-
+For Part 1, I originally solved using the ordering on Shape (writing compare function).
+
+For Part 2, I decided to redo the solution to handle both parts by defining a CyclicEnum
+class and making Shape an instance (using DerivingAnyClass). In addition to using this to
+detemine the outcome of a round, it also enables the creation of the rounds for part 2 
+(since winning/losing/drawing can be stated in terms of the successor and predecessor functions).
+-}
 
 module Day2 where
 
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 
-data Shape = Rock | Paper | Scissors
-    deriving (Show, Eq, Enum)
+class (Eq a, Enum a, Bounded a) => CyclicEnum a where
 
-instance Ord Shape where
-    compare s1 s2 
-        | s1 == s2 = EQ
-        | s1 == Rock && s2 == Scissors = LT
-        | s1 == Rock && s2 == Paper = GT
-        | s1 == Scissors && s2 == Rock = GT
-        | s1 == Scissors && s2 == Paper = LT
-        | s1 == Paper && s2 == Rock = LT
-        | s1 == Paper && s2 == Scissors = GT
+    cpred :: a -> a
+    cpred x
+        | x == minBound = maxBound
+        | otherwise = pred x
+
+    csucc :: a -> a
+    csucc x
+        | x == maxBound = minBound
+        | otherwise = succ x
+
+data Shape = Rock | Paper | Scissors
+    deriving (Show, Eq, Enum, Bounded, CyclicEnum)
 
 outcome :: Shape -> Shape -> Int
-outcome s1 s2 =
-    case (compare s1 s2) of
-        LT -> 0
-        EQ -> 3
-        GT -> 6
+outcome s1 s2
+    | s1 == s2       = 3
+    | csucc s1 == s2 = 6
+    | cpred s1 == s2 = 0
 
 score :: Shape -> Shape -> Int
 score player1 player2 =
@@ -41,22 +52,39 @@ letterToShape s =
         "Y" -> Paper
         "Z" -> Scissors
 
-playRound :: T.Text -> Int
-playRound s =
-    score player1 player2
-    where
-        [player1, player2] = map letterToShape $ T.words s
+letterToOutcomeShape :: T.Text -> T.Text -> Shape
+letterToOutcomeShape p1 o =
+    case o of
+        "X" -> cpred (letterToShape p1)     -- need to play shape to lose
+        "Y" -> letterToShape p1             -- need to play shhape to draw
+        "Z" -> csucc (letterToShape p1)     -- need tp play shape to win
 
-playTornament :: [T.Text] -> Int
-playTornament rounds = sum $ map playRound rounds
+part1Round :: T.Text -> T.Text -> (Shape, Shape)
+part1Round player1 player2 = (letterToShape player1, letterToShape player2)
+
+part2Round :: T.Text -> T.Text -> (Shape, Shape)
+part2Round player1 player2 = (letterToShape player1, letterToOutcomeShape player1 player2)
+
+playRound :: (T.Text -> T.Text -> (Shape, Shape)) -> T.Text -> Int
+playRound makeRound s =
+    score player1' player2'
+    where
+        [player1, player2] = T.words s
+        (player1', player2') = makeRound player1 player2
+
+playTornament :: (T.Text -> T.Text -> (Shape, Shape)) -> [T.Text] -> Int
+playTornament makeRound rounds = sum $ map (playRound makeRound) rounds
 
 
 main :: IO ()
 main = do
     contents <- TIO.readFile "../data/day2.txt"
     let rounds = T.lines contents
-    let result = playTornament rounds
-    print result
+    let result1 = playTornament part1Round rounds
+    let result2 = playTornament part2Round rounds
+    print result1
+    print result2
+
 
 
 
