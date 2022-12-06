@@ -20,7 +20,7 @@ sortElves input =
 
 main :: IO ()
 main = do
-    contents <- TIO.readFile "../data/day1.txt"
+    contents <- TIO.readFile "./data/day1.txt"
     let contents' = T.strip contents
     putStrLn $ "Part 1: " <> show (head (sortElves contents'))
     putStrLn $ "Part 2: " <> show ((sum . take 3) (sortElves contents'))

@@ -46,7 +46,7 @@ process2 rucksacks =
 
 main :: IO ()
 main = do
-    contents <- TIO.readFile "../data/day3.txt"
+    contents <- TIO.readFile "./data/day3.txt"
     let rucksacks = T.lines contents
     let result1 = process1 rucksacks
     putStrLn $ "Part 1: " <> show result1

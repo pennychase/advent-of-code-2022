@@ -78,7 +78,7 @@ playTornament makeRound rounds = sum $ map (playRound makeRound) rounds
 
 main :: IO ()
 main = do
-    contents <- TIO.readFile "../data/day2.txt"
+    contents <- TIO.readFile "./data/day2.txt"
     let rounds = T.lines contents
     let result1 = playTornament part1Round rounds
     let result2 = playTornament part2Round rounds

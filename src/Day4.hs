@@ -41,7 +41,7 @@ parseSections = sepEndBy1 parseRanges eol
 
 main :: IO ()
 main = do
-    input <- readInput "../data/day4.txt" parseSections
+    input <- readInput "./data/day4.txt" parseSections
     let result1 = solve contains input
     putStrLn $ "Part 1: " <> show result1
     let result2 = solve overlaps input
