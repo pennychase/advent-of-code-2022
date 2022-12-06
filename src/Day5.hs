@@ -20,25 +20,30 @@ type To = Int
 data Move = Move Number From To
     deriving Show
 
-move :: Move -> Map Int String -> Map Int String
-move (Move num from to) m =
+data PushType = One | All
+
+move :: PushType -> Move -> Map Int String -> Map Int String
+move pt (Move num from to) m =
     M.insert from restFrom (M.insert to newToStack m)
     where
         (Just fromStack) = M.lookup from m
         (Just toStack) = M.lookup to m
         (poppedFrom, restFrom) = splitAt num fromStack -- pop fromStack
-        newToStack = foldl' (\x y -> y:x) toStack poppedFrom -- push onto to stack
+        newToStack = case pt of   -- push onto to stack
+            One -> foldl' (\x y -> y:x) toStack poppedFrom 
+            All -> poppedFrom <> toStack
 
-allMoves :: [Move] -> Map Int String -> Map Int String
-allMoves [] stacks = stacks
-allMoves (m:ms) stacks = allMoves ms (move m stacks)
+allMoves :: PushType -> [Move] -> Map Int String -> Map Int String
+allMoves _ [] stacks = stacks
+allMoves pt (m:ms) stacks = allMoves pt ms (move pt m stacks)
 
 part1 :: [Move] -> Map Int String -> String
-part1 moves stacks =
-    "[" <> map top (M.elems (allMoves moves stacks)) <> "]"
-    where
-        top s = 
-            if null s then ' ' else head s
+part1 moves stacks = map head $ M.elems (allMoves One moves stacks)
+    
+part2 :: [Move] -> Map Int String -> String
+part2 moves stacks = map head $ M.elems (allMoves All moves stacks)
+    
+
 
 -- Processing input
 -- The input file is in two part: the stacks and the moves. To read it:
@@ -110,6 +115,7 @@ main = do
     let str1' = T.unlines $ init $ T.lines str1
     (stacks, moves) <- processInput (T.unpack str1') (T.unpack str2)
     putStrLn $ "Part 1: " <> part1 moves stacks
+    putStrLn $ "Part 2: " <> part2 moves stacks
   
 
 
